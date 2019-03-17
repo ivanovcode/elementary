@@ -120,10 +120,15 @@
     $config = parse_ini_file(dirname(__FILE__).'/app.ini', true);
 
     if($_GET['m']=='admin') {
-        $tpl = new template(dirname(__FILE__).'/template/login.tpl');
-        //$tpl->set('username', 'Alexander');
-        //$tpl->set('header', $tpl->getFile('header.tpl'));
-        $tpl->render();
+        if($config['admin']['email']!='demo@demo.com') {
+            $tpl = new template(dirname(__FILE__).'/template/login.tpl');
+            //$tpl->set('username', 'Alexander');
+            //$tpl->set('header', $tpl->getFile('header.tpl'));
+            $tpl->render();
+
+        } else {
+            die('Функция администраторской панели выключена. Обратитесь к Администратору.');
+        }
         die();
     }
 
