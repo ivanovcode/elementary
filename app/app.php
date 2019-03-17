@@ -172,11 +172,14 @@
                 exit;
             }
             $phones = [];
+            $i=0;
             foreach ( $config['phones'] as $k => $phone )    {
+
                 if($phone==$_POST['phone']) {
                     unset($config['phones'][$k]);
                 } else {
-                    array_push($phones, $config['phones'][$k]);
+                    $i++;
+                    $phones[$i] = $config['phones'][$k];
                 }
             }
             $config['phones'] = $phones;
