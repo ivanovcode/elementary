@@ -1,5 +1,6 @@
 <meta charset="utf-8">
-<?php require('app.php'); ?>
+
+<?php require('app/app.php'); ?>
 
 
 На странице с номером телефона <?=$phone?>, может быть несколько элементов с номерами телефона <?=$phone?>.
