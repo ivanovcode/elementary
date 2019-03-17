@@ -43,7 +43,7 @@
                     location.reload();
                 },
                 error: function (e) {
-                    alert('Error');
+                    alert('Ошибка авторизации');
                 }
             });
         });

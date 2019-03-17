@@ -121,10 +121,24 @@
 
     if($_GET['m']=='admin') {
         if($config['admin']['email']!='demo@demo.com') {
-            $tpl = new template(dirname(__FILE__).'/template/login.tpl');
-            //$tpl->set('username', 'Alexander');
-            //$tpl->set('header', $tpl->getFile('header.tpl'));
-            $tpl->render();
+            session_start();
+            if(!empty($_SESSION['user_session']) && $_SESSION['user_session'] == $config['admin']['session']) {
+                $tpl = new template(dirname(__FILE__).'/template/list.tpl');
+                $list = "";
+                foreach ( $config['phones'] as $k => $phone )    {
+
+                    $list .= '                     
+                       <tr><td>'.$phone.'</td><td>'.(count($config['phones'])>1?'<span data-value="'.$phone.'">[удалить]</span>':'').'</td></tr>
+                    ';
+                }
+                $tpl->set('list', $list);
+                $tpl->render();
+            } else {
+                $tpl = new template(dirname(__FILE__).'/template/login.tpl');
+
+                //$tpl->set('header', $tpl->getFile('header.tpl'));
+                $tpl->render();
+            }
 
         } else {
             die('Функция администраторской панели выключена. Обратитесь к Администратору.');
@@ -132,15 +146,71 @@
         die();
     }
 
-    if($_GET['m']=='signin') {
-        if (!(isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])
-            && $_SERVER['PHP_AUTH_USER'] == 'demo@demo.com'
-            && $_SERVER['PHP_AUTH_PW'] == 'demo')) {
-            //header('WWW-Authenticate: Basic realm="Restricted area"');
+    if($_GET['m']=='addphone') {
+            session_start();
+            if(!empty($_SESSION['user_session']) && $_SESSION['user_session'] == $config['admin']['session']) {
+                $_POST['phone'] = preg_replace("/[^0-9]/", "", $_POST['phone']);
+                if(empty($_POST['phone'])) {
+                    header('HTTP/1.1 401 Unauthorized');
+                    exit;
+                }
+                $config['phones'][count($config['phones'])+1] = $_POST['phone'];
+                write_ini_file(dirname(__FILE__).'/app.ini', $config);
+                die();
+            } else {
+                header('HTTP/1.1 401 Unauthorized');
+                exit;
+            }
+    }
+
+    if($_GET['m']=='delphone') {
+        session_start();
+        if(!empty($_SESSION['user_session']) && $_SESSION['user_session'] == $config['admin']['session']) {
+            $_POST['phone'] = preg_replace("/[^0-9]/", "", $_POST['phone']);
+            if(empty($_POST['phone']) || count($config['phones'])==1) {
+                header('HTTP/1.1 401 Unauthorized');
+                exit;
+            }
+            $phones = [];
+            foreach ( $config['phones'] as $k => $phone )    {
+                if($phone==$_POST['phone']) {
+                    unset($config['phones'][$k]);
+                } else {
+                    array_push($phones, $config['phones'][$k]);
+                }
+            }
+            $config['phones'] = $phones;
+            write_ini_file(dirname(__FILE__).'/app.ini', $config);
+            die();
+        } else {
             header('HTTP/1.1 401 Unauthorized');
             exit;
         }
+    }
 
+    if($_GET['m']=='signout') {
+        session_start();
+        unset($_SESSION['user_session']);
+        if(session_destroy()) {
+            $uri_parts = explode('?', $_SERVER['REQUEST_URI'], 2);
+            $config['admin']['session'] = "";
+            write_ini_file(dirname(__FILE__).'/app.ini', $config);
+            header("Location: http://$_SERVER[HTTP_HOST]" . $uri_parts[0] . "?m=admin");
+            die();
+        }
+    }
+
+    if($_GET['m']=='signin') {
+        if (!(isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])
+            && $_SERVER['PHP_AUTH_USER'] == $config['admin']['email']
+            && md5($_SERVER['PHP_AUTH_PW']) == $config['admin']['password'])) {
+            header('HTTP/1.1 401 Unauthorized');
+            exit;
+        }
+        session_start();
+        $_SESSION['user_session'] = md5(rand());
+        $config['admin']['session'] = $_SESSION['user_session'];
+        write_ini_file(dirname(__FILE__).'/app.ini', $config);
         die();
     }
 
