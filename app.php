@@ -72,6 +72,6 @@
 
     $phone = $config['phones'][$current];
 
-    if($_GET['result'])echo $phone;
+    if($_GET['result']) echo $phone;
 
     write_ini_file('config.ini', $config);
