@@ -178,6 +178,7 @@
     }
 
     if(isset($_GET['m']) && $_GET['m']=='api') {
+
         $list = explode_phones($config['phones']);
         $current_stream = $_GET["stream"];
         $current_phone = $config['streams'][$current_stream];
@@ -196,6 +197,9 @@
             $next_phone = $available_phones[0];
         } else {
             if($index !== false && $index < count($available_phones)-1) $next_phone = $available_phones[$index+1];
+            if(empty($next_phone)) {
+                $next_phone = $available_phones[0];
+            }
         }
         if($config['setting']['debug']=="true") {
             echo "current_index_stream: " . $current_stream . "\n";
