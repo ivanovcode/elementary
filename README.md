@@ -1,10 +1,10 @@
 
 **Скрипт ротации номера телефона на странице**
-
-[![Watch the video](https://github.com/profidela/elementary/blob/rotate/app/assets/img/preview.jpg)](https://youtu.be/11nF4psW77g)
-![Alt text](app/assets/img/preview.jpg?raw=true "Title")
-
 Поддержка использования как на .php страницах, так и .html c использованием javascript.
+
+[![Смотреть видео](app/assets/img/preview.jpg?raw=true)](https://youtu.be/11nF4psW77g)
+
+
 
 ## Как использовать?
 
