@@ -1,5 +1,6 @@
 
 **Скрипт ротации номера телефона на странице**
+
 Поддержка использования как на .php страницах, так и .html c использованием javascript.
 
 [![Смотреть видео](app/assets/img/preview.jpg?raw=true)](https://youtu.be/11nF4psW77g)
