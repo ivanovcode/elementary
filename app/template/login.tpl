@@ -32,6 +32,7 @@
         <input class="u-full-width" type="password" placeholder="Пароль" id="Password">
         <input class="button-primary" type="submit" value="Вход">
     </form>
+    <p><i>Ссылка на описание и репозиторий:</i> <a href="https://github.com/profidela/elementary" target="_blank">https://github.com/profidela/elementary</a></p>
 </div>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <script>
