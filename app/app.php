@@ -63,6 +63,19 @@
         array_unshift ($arr,$item);
     }
 
+    function explode_phones($list) {
+        $result = array("phones"=>[], "streams"=>[]);
+        foreach ($list as $key=>$item) {
+            if(stristr($item, ':') === false) {
+                $result["phones"][$key] = $item;
+            } else {
+                $item = explode(":", $item);
+                $result["phones"][$key] = $item[0];
+                $result["streams"][$key] =  explode(",", $item[1]);
+            }
+        }
+        return $result;
+    }
 
     if (!function_exists('write_ini_file')) {
 
@@ -129,24 +142,27 @@
     ini_set('error_reporting', E_ALL);
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
-    /*ini_set('error_reporting', 0);
-    ini_set('display_errors', 0);*/
 
     $config = parse_ini_file(dirname(__FILE__).'/app.ini', true);
+
+    if($config['setting']['debug']=="false") {
+        ini_set('error_reporting', 0);
+        ini_set('display_errors', 0);
+    }
 
     if(isset($_GET['m']) && $_GET['m']=='admin') {
         if($config['admin']['email']!='demo@demo.com') {
             session_start();
             if(!empty($_SESSION['user_session']) && $_SESSION['user_session'] == $config['admin']['session']) {
                 $tpl = new template(dirname(__FILE__).'/template/list.tpl');
-                $list = "";
-                foreach ( $config['phones'] as $k => $phone )    {
-
-                    $list .= '                     
-                       <tr><td>'.$phone.'</td><td>'.(count($config['phones'])>1?'<span data-value="'.$phone.'">[удалить]</span>':'').'</td></tr>
+                $tr = "";
+                $list = explode_phones($config['phones']);
+                foreach ( $list['phones'] as $k => $phone )    {
+                    $tr .= '                     
+                       <tr><td data-key="Phone">'.$phone.'</td><td data-key="Streams">'.(!empty($list['streams'][$k])?"<span>".implode("</span>,<span>", $list['streams'][$k]):"-").'</td><td data-key="streams">'.(count($list['phones'])>1?'<span data-mode="edit">[настроить]</span> <span data-mode="delete">[удалить]</span>':'').'</td></tr>
                     ';
                 }
-                $tpl->set('list', $list);
+                $tpl->set('list', $tr);
                 $tpl->render();
             } else {
                 $tpl = new template(dirname(__FILE__).'/template/login.tpl');
@@ -161,6 +177,47 @@
         die();
     }
 
+    if(isset($_GET['m']) && $_GET['m']=='api') {
+        $list = explode_phones($config['phones']);
+        $current_stream = $_GET["stream"];
+        $current_phone = $config['streams'][$current_stream];
+        $total_phones = count($list['phones']);
+        $available_phones = [];
+        foreach ( $list['streams'] as $k => $streams )    {
+            $position = array_search($current_stream, $streams);
+            if(is_numeric($position)) {
+                //echo "Для потока № ".$current_stream. " доступен телефон № ".$k."\n";
+                array_push($available_phones, $k);
+            }
+        }
+        $last_phone = end($available_phones);
+        $index = array_search($current_phone, $available_phones);
+        if($current_phone==$last_phone) {
+            $next_phone = $available_phones[0];
+        } else {
+            if($index !== false && $index < count($available_phones)-1) $next_phone = $available_phones[$index+1];
+        }
+        if($config['setting']['debug']=="true") {
+            echo "current_index_stream: " . $current_stream . "\n";
+            echo "current_phone: " . $current_phone . "\n";
+            echo "total_phones: " . $total_phones . "\n";
+            echo "next_phone: " . $next_phone . "\n";
+            echo "last_phone: " . $last_phone . "\n";
+
+            echo "available_phones: " . "\n";
+            print_r($available_phones);
+            echo "\n";
+            echo "list: " . "\n";
+            print_r($list);
+            echo "\n";
+        }
+
+        $config['streams'][$current_stream] = $next_phone;
+        write_ini_file(dirname(__FILE__).'/app.ini', $config);
+
+        die();
+    }
+
     if(isset($_GET['m']) && $_GET['m']=='addphone') {
             session_start();
             if(!empty($_SESSION['user_session']) && $_SESSION['user_session'] == $config['admin']['session']) {
@@ -169,7 +226,43 @@
                     header('HTTP/1.1 401 Unauthorized');
                     exit;
                 }
-                $config['phones'][count($config['phones'])+1] = $_POST['phone'];
+
+                /*Поиск существования номера*/
+
+                $list = explode_phones($config['phones']);
+                $edit_index = array_search($_POST['phone'], $list['phones']);
+
+                $_POST['streams'] = preg_replace('/[^0-9,:()-]/', '', $_POST['streams']);
+                $_POST['streams'] = explode(",", $_POST['streams']);
+
+                /* Получение списка идентификаторов потоков */
+                $_streams = [];
+                foreach ( $list['streams'] as $k => $_item ) {
+                    $_streams = array_merge($_streams, $_item);
+                }
+                $_streams = array_unique($_streams);
+
+
+                /* Обработка новых добавляемых потоков */
+                $streams = [];
+                foreach ($_POST['streams'] as $k => $steam )    {
+                    if(intval($steam)>=1 && intval($steam)<=99 ) {
+                        array_push($streams, $steam);
+                    }
+                }
+
+                $index = (intval($edit_index)>0?$edit_index:count($config['phones'])+1);
+
+                /* Выявление различия и добавление новых */
+                $adds = array_diff_key(array_flip($streams), array_flip($_streams));
+                foreach ( $adds as $k => $add ) {
+                    $config['streams'][$k]=$index;
+                }
+
+                $streams = implode($streams, ",");
+
+                $config['phones'][$index] = $_POST['phone'].(!empty($streams)?":".$streams:"");
+
                 write_ini_file(dirname(__FILE__).'/app.ini', $config);
                 die();
             } else {
@@ -181,23 +274,44 @@
     if(isset($_GET['m']) && $_GET['m']=='delphone') {
         session_start();
         if(!empty($_SESSION['user_session']) && $_SESSION['user_session'] == $config['admin']['session']) {
+
             $_POST['phone'] = preg_replace("/[^0-9]/", "", $_POST['phone']);
             if(empty($_POST['phone']) || count($config['phones'])==1) {
                 header('HTTP/1.1 401 Unauthorized');
                 exit;
             }
+
             $phones = [];
             $i=0;
-            foreach ( $config['phones'] as $k => $phone )    {
+            $list = explode_phones($config['phones']);
+
+            foreach ( $list['phones'] as $k => $phone )    {
 
                 if($phone==$_POST['phone']) {
-                    unset($config['phones'][$k]);
+                    unset($list['phones'][$k]);
                 } else {
                     $i++;
-                    $phones[$i] = $config['phones'][$k];
+                    $phones[$i] = $list['phones'][$k].(!empty($list['streams'][$k])?":".implode($list['streams'][$k],","):"");
                 }
             }
             $config['phones'] = $phones;
+
+            $list = explode_phones($config['phones']);
+
+            /* Получение списка идентификаторов потоков */
+            $streams = [];
+            foreach ( $list['streams'] as $k => $item ) {
+                $streams = array_merge($streams, $item);
+            }
+            $streams = array_unique($streams);
+            $streams= array_flip($streams);
+
+            /* Удаление */
+            $deletes = array_diff_key($config['streams'], $streams);
+            foreach ( $deletes as $k => $delete ) {
+                unset($config['streams'][$k]);
+            }
+
             write_ini_file(dirname(__FILE__).'/app.ini', $config);
             die();
         } else {
@@ -234,13 +348,13 @@
 
     $current = intval($config['cache']['phone']);
 
+    $list = explode_phones($config['phones']);
 
-    $current = ($current+1>count($config['phones'])?1:$current+1);
+    $current = ($current+1>count($list['phones'])?1:$current+1);
     $config['cache']['phone'] = $current;
 
-
-    $key = array_search($config['phones'][$current], $config['phones']);
-    $phones = $config['phones'];
+    $key = array_search($list['phones'][$current], $list['phones']);
+    $phones = $list['phones'];
     shift_in_right($phones);
     shift_in_left($phones);
     $x=0; if($key>1) while ($x++<$key-1) shift_in_right($phones);
@@ -248,5 +362,24 @@
 
     $phone = $phones[1];
 
+    /* $_phone */
+    foreach ( $config['streams'] as $k => $stream )    {
+        $_current = intval($stream);
+        $_phone[$k] = $list['phones'][$_current];
+        if($config['setting']['debug']=="true") {
+            echo "_curent_stream: " . $k . "<br>";
+            echo "_current: " . $_current . "<br>";
+            echo "list[phones][_current]: " . $list['phones'][$_current] . "<br><br>";
+        }
+    }
+
+    /* $_link */
+    foreach ( $config['streams'] as $k => $stream )    {
+        $_link[$k] = ' elementary-stream-id="'.$k.'" ';
+    }
+
+
     if(isset($_GET['m']) && $_GET['m']=="echo") echo $phone;
     write_ini_file(dirname(__FILE__).'/app.ini', $config);
+
+    echo '<script type="text/javascript">'.file_get_contents(dirname(__FILE__).'/app.js').'</script>';

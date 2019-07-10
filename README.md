@@ -18,40 +18,30 @@ __2. Вставить код на странице__
 ?>
 ```
 ```
-//Выводим телефон там где необходимо, в одном или нескольких местах
+//[1] На странице ратируется номер телефона, одинаковых номеров может быть несколько на странице.
 <?=$phone?>
 
 
-//Или выводим сразу разные номера c [N] номером телефона по порядку
+//[2] А так же номера могут ратироваться и быть разными на странице.
 <?=$phone[1]?>
 <?=$phone[2]?>
 <?=$phone[3]?>
 
-```
-[ДЕМО PHP](http://debug.ivanov.site/rotate/index.php)
+//[3] Вывод номера может меняться только поcле клика на cсылку где N это номер потока,
 
+<a href="#" <?=$_link[N]?>>[Нажми]</a> 
+<?=$_phone[N]?>
 
-
-*JavaScript (без jQuery) (Если фаил с расширением .html)*
-```
-<script type="text/javascript">
-    //Разместить в конце страницы до закрывающего тега </body> 
-    document.addEventListener("DOMContentLoaded", function(){ let request=new XMLHttpRequest;request.open("GET","app/app.php?m=echo",!0),request.onload=function(){if(request.status>=200&&request.status<400){let t=JSON.parse(request.responseText),s=document.getElementsByClassName("phone");for(var e=0;e<s.length;++e)s[e].innerHTML=t}},request.send();});
-</script>
-```
-```
-<!--Выводим телефон там где необходимо, в одном или нескольких местах-->
-<span class="phone"></span>
+... количество потоков возможно от 0 .. 99
 
 ```
+[ДЕМО PHP](http://elementary.profidela.com/example.php)
 
-[ДЕМО JavaScript](http://debug.ivanov.site/rotate/index.html)
-
-__3. Редактировать фаил настроек app/app.ini и пароля входа в админку__
+__3. Редактировать фаил настроек app/app.ini и пароля входа в админку, хэш пароля можно сгенерировать здесь http://www.md5.cz/__
 
 __4. Перейти в админ-панель авторизоваться  [http://ваша_веб_страница/?m=admin](http://ваш-сайт/ваша-страница/?m=admin)__
 
-[ДЕМО Админка](http://debug.ivanov.site/rotate/?m=admin)
+[ДЕМО Админка](http://elementary.profidela.com/example.php?m=admin)
 
 *Логин:* ``` demo2@demo.com ```
 *Пароль:* ``` demo ```
