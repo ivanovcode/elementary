@@ -1,6 +1,8 @@
 
 **Скрипт ротации номера телефона на странице**
 
+[![Watch the video](https://imgur.com/bL6xBPN)](https://youtu.be/11nF4psW77g)
+
 Поддержка использования как на .php страницах, так и .html c использованием javascript.
 
 ## Как использовать?

@@ -57,9 +57,12 @@
         Пример потока 4 <a href="#" <?=$_link[4]?>>[Нажми]</a> <b><?=$_phone[4]?></b><br>
 <i>... количество потоков возможно от 0 .. 99</i>
     </p>
-    <p><i>Ссылка на описание и репозиторий:</i> <a href="https://github.com/profidela/elementary" target="_blank">https://github.com/profidela/elementary</a></p>
-    <p><i>Перейти в Админку: </i> <a href="?m=admin" target="_blank">Личный кабинет</a></p>
-    <p><i>Ревью изменений: </i> <a href="https://github.com/profidela/elementary/commit/67e6722ae2cb9981d60fbcb3f396d5d367256197" target="_blank">Изменения кода в версии 2.0)</a></p>
+        <p>
+        <i>Перейти в Админку: </i> <a href="?m=admin" target="_blank">Личный кабинет</a><br>  
+        <i>Ревью изменений: </i> <a href="https://github.com/profidela/elementary/commit/67e6722ae2cb9981d60fbcb3f396d5d367256197" target="_blank">Изменения кода в версии 2.0</a><br>
+        <i>Ссылка на описание и репозиторий:</i> <a href="https://github.com/profidela/elementary" target="_blank">https://github.com/profidela/elementary</a></p>
+
+
 
 </div>
 </body>
